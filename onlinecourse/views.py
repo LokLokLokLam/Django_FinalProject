@@ -158,9 +158,10 @@ def show_exam_result(request, course_id, submission_id):
 
         
     for a_question in course.question_set.all():
-        is_correct = a_question.is_get_score(details[a_question.id])
-        if is_correct:
-            total_grade = a_choice.question.grade + total_grade
+        if a_question.id in details:
+            is_correct = a_question.is_get_score(details[a_question.id])
+            if is_correct:
+                total_grade = a_choice.question.grade + total_grade
 
     total_score = course.total_score()
     print(f"Total score = {total_score}")
