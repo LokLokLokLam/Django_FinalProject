@@ -66,6 +66,12 @@ class Course(models.Model):
     def __str__(self):
         return "Name: " + self.name + "," + \
                "Description: " + self.description
+    
+    def total_score(self):
+        total_score = 0
+        for question in self.question_set.all():
+            total_score += question.grade
+        return total_score
 
 
 # Lesson model
@@ -115,7 +121,9 @@ class Question(models.Model):
     # <HINT> A sample model method to calculate if learner get the score of the question
     def is_get_score(self, selected_ids):
         all_answers = self.choice_set.filter(is_correct=True).count()
-        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        selected_correct = self.choice_set.filter(id__in=selected_ids).count()
+        #print(f"{selected_ids} {all_answers} {selected_correct}")
+        print(f"{self.choice_set.all()}")
         if all_answers == selected_correct:
             return True
         else:
@@ -135,7 +143,7 @@ class Choice(models.Model):
     is_correct = models.BooleanField()
 
     def __str__(self):
-        return self.choice
+        return "ID = " + str(self.id) + " Text = " + self.choice + " " + str(self.is_correct)
 
 
 # <HINT> The submission model
@@ -144,6 +152,6 @@ class Choice(models.Model):
 # One choice could belong to multiple submissions
 class Submission(models.Model):
     enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-    chocies = models.ManyToManyField(Choice)
+    choices = models.ManyToManyField(Choice)
 
 #    Other fields and methods you would like to design

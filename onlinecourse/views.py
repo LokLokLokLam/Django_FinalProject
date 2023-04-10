@@ -115,12 +115,12 @@ def submit(request, course_id):
     user = request.user
     enroll = Enrollment.objects.get(user=user, course=course)
     ans = extract_answers(request)
-    submission = Submission.objects.create(enroll)
+    submission = Submission.objects.create(enrollment=enroll)
     for an_ans in ans:
         an_ans_obj = Choice.objects.get(pk=an_ans)
-        submission.chocies.add(an_ans_obj)
+        submission.choices.add(an_ans_obj)
     submission.save()
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(submission.id,)))
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course_id,submission.id,)))
 
 # <HINT> A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
@@ -139,7 +139,44 @@ def extract_answers(request):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
+def show_exam_result(request, course_id, submission_id):
+    context = {}
+    selected_ids = []
+    total_grade = 0
+    details = {}
+    course = Course.objects.get(pk=course_id)
+    submission = Submission.objects.get(pk=submission_id)
+    for a_choice in submission.choices.all():
+        selected_ids.append(a_choice.id)
+        question_id = a_choice.question.id
+        if question_id in details:
+            details[question_id].append(a_choice.id)
+        else:
+            tlist = []
+            tlist.append(a_choice.id)
+            details[question_id] = tlist
+
+        
+    for a_question in course.question_set.all():
+        is_correct = a_question.is_get_score(details[a_question.id])
+        if is_correct:
+            total_grade = a_choice.question.grade + total_grade
+
+    total_score = course.total_score()
+    print(f"Total score = {total_score}")
+    print(f"Total grade = {total_grade}")
+    total_inpc = 0
+    if total_score > 0:
+        total_inpc = int(total_grade / total_score * 100)
+
+    context['course'] = course
+    context['selected_ids'] = selected_ids
+    context['grade'] = total_inpc
+
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+
+
+
 
 
 
